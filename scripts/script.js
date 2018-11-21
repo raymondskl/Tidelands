@@ -26,7 +26,7 @@ const uivase = fd.child('Rays').child('TerracottaVase0');
 const winModal = fd.child('OutcomeMOdal').child('WinningModal');
 const loseModal = fd.child('OutcomeMOdal').child('LosingModal');
 const closeWinModal = winModal.child('rectangle0').child('Close');
-const closeLoseModal = loseModal.child('Close0');
+const closeLoseModal = loseModal.child('rectangle0').child('Close0');
 
 const tapChunks = [Scene.root.child('vase_pieces').child('model_GRP').child('TAP_CHUNK_1'), Scene.root.child('vase_pieces').child('model_GRP').child('TAP_CHUNK_2'), Scene.root.child('vase_pieces').child('model_GRP').child('TAP_CHUNK_3')];
 const UIChunks = [fd.child('Rays').child('BLACK').child('UIVASE_BLACK').child('model_GRP').child('geo_jug_01').child('CHUNK_1'), fd.child('Rays').child('BLACK').child('UIVASE_BLACK').child('model_GRP').child('geo_jug_01').child('CHUNK_2'), fd.child('Rays').child('BLACK').child('UIVASE_BLACK').child('model_GRP').child('geo_jug_01').child('CHUNK_3')];
