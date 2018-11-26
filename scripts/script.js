@@ -16,6 +16,7 @@ const Diagnostics = require('Diagnostics');
 const Animation = require ('Animation');
 const Materials = require ('Materials')
 const Networking = require('Networking');
+//const Time = require('Time');
 
 var fd = Scene.root.child('Device').child('Camera').child('Focal Distance');
 var ui = fd.child('OutcomeMOdal');
@@ -32,6 +33,8 @@ const winModal = fd.child('OutcomeMOdal').child('WinningModal');
 const loseModal = fd.child('OutcomeMOdal').child('LosingModal');
 const closeWinModal = winModal.child('rectangle0').child('Close');
 const closeLoseModal = loseModal.child('rectangle0').child('Close0');
+const thankyouModal = fd.child('OutcomeMOdal').child('THANK YOU');
+var thankyoutextNode = thankyouModal.child('rectangle0').child('DynamicPrizeText1');
 
 const tapChunks = [fd.child('nullObject0'), Scene.root.child('vase_pieces').child('model_GRP').child('TAP_CHUNK_2'), Scene.root.child('vase_pieces').child('model_GRP').child('TAP_CHUNK_3')];
 const UIChunks = [fd.child('Rays').child('BLACK').child('UIVASE_BLACK').child('model_GRP').child('geo_jug_01').child('CHUNK_1'), fd.child('Rays').child('BLACK').child('UIVASE_BLACK').child('model_GRP').child('geo_jug_01').child('CHUNK_2'), fd.child('Rays').child('BLACK').child('UIVASE_BLACK').child('model_GRP').child('geo_jug_01').child('CHUNK_3')];
@@ -56,10 +59,10 @@ var allTrue = false;
 var entryId;
 var prizeMsg;
 var userEmail; 
-
+var switchCameraInstruction;
 
 function init(){
-	animateFloatingNoOffset(tapChunks[0], 2, 2000,7);
+	animateFloatingNoOffset(tapChunks[0], 2, 2000,0);
 	animateFloating(tapChunks[1], 10, 2000);
 	animateFloating(tapChunks[2], 10, 2000);
 
@@ -204,6 +207,21 @@ function animateBump(obj, deltaFrom, ms, deltaTo){
 	//obj.animy_driver.onCompleted().subscribe(function (e) {obj.hidden = true;});
 }
 
+function animateTap(obj, deltaFrom, ms, deltaTo,loopcount, mirror){
+
+	obj.animy_driver = Animation.timeDriver({durationMilliseconds: ms, loopCount: loopcount, mirror: mirror});  
+	// create sampler
+	obj.animy_sampler = Animation.samplers.easeInBack(deltaFrom, deltaTo);
+  
+	// bind the animation to the object's property passing the driver and the sampler
+	obj.transform.scaleX = Animation.animate(obj.animy_driver, obj.animy_sampler);
+	obj.transform.scaleY = Animation.animate(obj.animy_driver, obj.animy_sampler);
+	obj.transform.scaleZ = Animation.animate(obj.animy_driver, obj.animy_sampler);
+
+	// start the animation
+	obj.animy_driver.start();
+}
+
 function fadeOut(obj, mat, ms, delay) {
 	// start the animation
 	Time.setTimeout(	function (elapsedTime) {		// create the driver and sampler as properties of (inside) the object
@@ -242,8 +260,9 @@ function testTrue(obj)
     
   Diagnostics.log(obj);
 
-  vase.hidden = false;
   uivase.hidden = true;
+  blackvase.hidden = true;
+  vase.hidden = false;
 
 
 	animateToCenter(vase, 0, 5000, -172.1033);
@@ -252,12 +271,11 @@ function testTrue(obj)
 	vase.transform.rotationY = time.pin().add(Time.ms.sub(Time.ms.pin()).div(1000/2)).div(12);
 	vase.transform.rotationZ = time.pin().add(Time.ms.sub(Time.ms.pin()).div(1000/2)).div(14); 
 
-	animateToCenter(uivase, 0, 5000, -172.1033);
-	animateBump(uivase, 8.44324, 7000, 15);
-	uivase.transform.rotationX = time.pin().add(Time.ms.sub(Time.ms.pin()).div(1000/2)).div(10);
-	uivase.transform.rotationY = time.pin().add(Time.ms.sub(Time.ms.pin()).div(1000/2)).div(12);
-	uivase.transform.rotationZ = time.pin().add(Time.ms.sub(Time.ms.pin()).div(1000/2)).div(14); 
-  //fadeOutPingPong(uiflasher, mat_vaseUIFlash, 800, 2000);
+	animateToCenter(blackvase, 0, 5000, -172.1033);
+	animateBump(blackvase, 8.44324, 7000, 15);
+	blackvase.transform.rotationX = time.pin().add(Time.ms.sub(Time.ms.pin()).div(1000/2)).div(10);
+	blackvase.transform.rotationY = time.pin().add(Time.ms.sub(Time.ms.pin()).div(1000/2)).div(12);
+	blackvase.transform.rotationZ = time.pin().add(Time.ms.sub(Time.ms.pin()).div(1000/2)).div(14); 
   return true;
 }
 
@@ -270,18 +288,13 @@ TouchGestures.onTap(tapChunks[1]).subscribe(function () { animateScale(tapChunks
 TouchGestures.onTap(tapChunks[2]).subscribe(function () { animateScale(tapChunks[2], 1, 1000);  uivase.hidden = blackvase.hidden = false; UIChunks[2].hidden = Reactive.val(true).delayBy({milliseconds: 1000}) ; fadeOut(flasher, mat_cloud, 400,0); fadeOut(uiflasher, mat_vaseUIFlash, 1200, 1000); piecesCollected[2] = true; testTrue(piecesCollected);});
 
 
-//allTrue.monitor().subscribe(function (e){ if (e) {vase.hidden = false;
-//uivase.hidden = true;} } )
-
-TouchGestures.onTap(vase).subscribe(function () {	vase.hidden = true; 	EnterLottery(onEntrySuccess); uiflasher.hidden = true; });//spawnVase(); 	time = Reactive.val(-200); 	time = time.pin().add(Time.ms.sub(Time.ms.pin()).div(1000/8));		bindTime(); } );
-
-
+TouchGestures.onTap(vase).subscribe(function () { EnterLottery(onEntrySuccess); fadeOut(flasher, mat_cloud, 400,0); uiflasher.hidden = true; animateTap(vase, 15, 1500, 0, 1, false);});
 
 //TAP ON VASE
 
 //CLOSE OUTCOME MODALS
-TouchGestures.onTap(closeWinModal).subscribe(function () { winModal.hidden = true; });
-TouchGestures.onTap(closeLoseModal).subscribe(function () { loseModal.hidden = true; });
+TouchGestures.onTap(closeWinModal).subscribe(function () { winModal.hidden = true; switchCameraInstruction=true});
+TouchGestures.onTap(closeLoseModal).subscribe(function () { loseModal.hidden = true; switchCameraInstruction=true});
 
 //EMAIL ENTRY
 // Create constants with our request data.
@@ -301,7 +314,7 @@ function onEntrySuccess(entryResponse){
 
   if (won) {
     // WINNING FUNCTION
-    textNode.text = 'You have won a ' + prizeMsg;
+    textNode.text = prizeMsg + "!" ;
     Diagnostics.log("WINNING!");
     winModal.hidden = false;
     // SHOW WINNING MODAL
@@ -317,6 +330,7 @@ function onEntrySuccess(entryResponse){
 
 function EnterLottery(onSuccess) {
   Networking.fetch(url).then(function(response) {
+  	Diagnostics.log(response);
     return response.json();
   })
   .then(function(myJson) {
@@ -338,6 +352,9 @@ function EmailSub(entry){
 	    // Here we process any errors that may happen with the request
 	    textNode.text = 'ERROR';
 	});
+	//SHOW THANK YOU FOR ENTERING
+	thankyouModal.hidden = false;
+	thankyoutextNode.text = prizeMsg;
 }
 
 
