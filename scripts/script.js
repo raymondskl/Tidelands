@@ -22,8 +22,13 @@ var fd = Scene.root.child('Device').child('Camera').child('Focal Distance');
 var ui = fd.child('OutcomeMOdal');
 //NETWORKING PRIZE
 var textbox = ui.child('WinningModal').child('rectangle0').child('Box');
+var textbox2 = ui.child('LosingModal').child('rectangle0').child('Box');
+
 var textemail = textbox.child('Email');
+var textemail2 = textbox2.child('Email2');
+
 var submitBut = ui.child('WinningModal').child('rectangle0').child('rectangle2').child('Submit');
+var submitBut2 = ui.child('LosingModal').child('rectangle0').child('rectangle2').child('Submit2');
 var textNode = ui.child('WinningModal').child('rectangle0').child('DynamicPrizeText0');
 
 const vase = fd.child('Rays').child('TerracottaVase');
@@ -31,16 +36,19 @@ const uivase = fd.child('Rays').child('TerracottaVase0');
 const blackvase = fd.child('Rays').child('BLACK');
 const winModal = fd.child('OutcomeMOdal').child('WinningModal');
 const loseModal = fd.child('OutcomeMOdal').child('LosingModal');
+const thankyouModal = fd.child('OutcomeMOdal').child('THANK YOU');
 const closeWinModal = winModal.child('rectangle0').child('Close');
 const closeLoseModal = loseModal.child('rectangle0').child('Close0');
-const thankyouModal = fd.child('OutcomeMOdal').child('THANK YOU');
-var thankyoutextNode = thankyouModal.child('rectangle0').child('DynamicPrizeText1');
+const closeThankYouModal = thankyouModal.child('rectangle0').child('Close');
+
+//var thankyoutextNode = thankyouModal.child('rectangle0').child('DynamicPrizeText1');
 
 const tapChunks = [fd.child('nullObject0'), Scene.root.child('vase_pieces').child('model_GRP').child('TAP_CHUNK_2'), Scene.root.child('vase_pieces').child('model_GRP').child('TAP_CHUNK_3')];
 const UIChunks = [fd.child('Rays').child('BLACK').child('UIVASE_BLACK').child('model_GRP').child('geo_jug_01').child('CHUNK_1'), fd.child('Rays').child('BLACK').child('UIVASE_BLACK').child('model_GRP').child('geo_jug_01').child('CHUNK_2'), fd.child('Rays').child('BLACK').child('UIVASE_BLACK').child('model_GRP').child('geo_jug_01').child('CHUNK_3')];
 
 var tutorialChunk;
-
+const instructionTapHere = fd.child('InstructionsModal').child('rectangle0').child('text3');
+var mat_taphere = Materials.get('InstructionFadeD');
 const flasher = Scene.root.child('Device').child('Camera').child('Flash').child('FlashRect');
 var mat_cloud = Materials.get("Flash");
 
@@ -58,8 +66,26 @@ var allTrue = false;
 //Networking VARS
 var entryId;
 var prizeMsg;
-var userEmail; 
+
 var switchCameraInstruction;
+
+var userEmail; 
+
+var userEmail2; 
+
+var cancelableTimer;
+
+NativeUI.getText('Email').monitor().subscribe(function (event) { 
+	if (event.newValue !== event.oldValue) { 
+		userEmail = event.newValue; 
+		textemail.text = userEmail;
+	}});
+
+NativeUI.getText('Email2').monitor().subscribe(function (event) { 
+	if (event.newValue !== event.oldValue) { 
+		userEmail2 = event.newValue; 
+		textemail2.text = userEmail2;
+	}});
 
 function init(){
 	animateFloatingNoOffset(tapChunks[0], 2, 2000,0);
@@ -242,7 +268,7 @@ function fadeOutPingPong(obj, mat, ms, delay) {
 	Time.setTimeout(	function (elapsedTime) {		// create the driver and sampler as properties of (inside) the object
 	obj.fadeout_driver = Animation.timeDriver({durationMilliseconds: ms, loopCount: Infinity, mirror: true});
 
-	obj.fadeout_sampler = Animation.samplers.easeInOutSine(1.0,0.0);
+	obj.fadeout_sampler = Animation.samplers.easeInOutSine(0.0,1.0);
 
 	// it's good to reset the driver before the animation starts (in case you ran
 	// this animation before)
@@ -251,6 +277,10 @@ function fadeOutPingPong(obj, mat, ms, delay) {
 	// bind the opacity to the animation passing the driver and sampler
 	mat.opacity = Animation.animate(obj.fadeout_driver, obj.fadeout_sampler);
 	obj.fadeout_driver.start();  }, delay);
+}
+
+function showTapHere(){
+		instructionTapHere.hidden = false;
 }
 
 function testTrue(obj)
@@ -276,6 +306,12 @@ function testTrue(obj)
 	blackvase.transform.rotationX = time.pin().add(Time.ms.sub(Time.ms.pin()).div(1000/2)).div(10);
 	blackvase.transform.rotationY = time.pin().add(Time.ms.sub(Time.ms.pin()).div(1000/2)).div(12);
 	blackvase.transform.rotationZ = time.pin().add(Time.ms.sub(Time.ms.pin()).div(1000/2)).div(14); 
+
+
+	fadeOutPingPong(instructionTapHere, mat_taphere, 4000, 3500);
+
+
+	cancelableTimer = Time.setTimeout(  function (elapsedTime) {    showTapHere();  }, 3500);
   return true;
 }
 
@@ -288,17 +324,18 @@ TouchGestures.onTap(tapChunks[1]).subscribe(function () { animateScale(tapChunks
 TouchGestures.onTap(tapChunks[2]).subscribe(function () { animateScale(tapChunks[2], 1, 1000);  uivase.hidden = blackvase.hidden = false; UIChunks[2].hidden = Reactive.val(true).delayBy({milliseconds: 1000}) ; fadeOut(flasher, mat_cloud, 400,0); fadeOut(uiflasher, mat_vaseUIFlash, 1200, 1000); piecesCollected[2] = true; testTrue(piecesCollected);});
 
 
-TouchGestures.onTap(vase).subscribe(function () { EnterLottery(onEntrySuccess); fadeOut(flasher, mat_cloud, 400,0); uiflasher.hidden = true; animateTap(vase, 15, 1500, 0, 1, false);});
+TouchGestures.onTap(vase).subscribe(function () { EnterLottery(onEntrySuccess); fadeOut(flasher, mat_cloud, 400,0); uiflasher.hidden = true; animateTap(vase, 15, 1500, 0, 1, false);     Time.clearTimeout(cancelableTimer); instructionTapHere.hidden = true; });
 
 //TAP ON VASE
 
 //CLOSE OUTCOME MODALS
 TouchGestures.onTap(closeWinModal).subscribe(function () { winModal.hidden = true; switchCameraInstruction=true});
 TouchGestures.onTap(closeLoseModal).subscribe(function () { loseModal.hidden = true; switchCameraInstruction=true});
+TouchGestures.onTap(closeThankYouModal).subscribe(function () { thankyouModal.hidden = true; switchCameraInstruction=true});
 
 //EMAIL ENTRY
 // Create constants with our request data.
-const url = 'https://lottery-d3115.herokuapp.com';
+const url = 'https://tidelands.herokuapp.com';
 
 function onEntrySuccess(entryResponse){
 
@@ -343,8 +380,8 @@ function EnterLottery(onSuccess) {
 }
 
 function EmailSub(entry){
-	Diagnostics.log(url + "/register?email=" + userEmail + "&entryId=" + entry);
-	Networking.fetch(url + "/register?email=" + userEmail + "&entryId=" + entry).then(function(response) {
+	Diagnostics.log(url + "/register?email=" + encodeURIComponent(userEmail) + "&entryId=" + entry);
+	Networking.fetch(url + "/register?email=" + encodeURIComponent(userEmail) + "&entryId=" + entry).then(function(response) {
 		Diagnostics.log(response);
 	    //return response.json();
 	    Diagnostics.log('User email is ' + userEmail + " with EntryID " + entry);
@@ -352,10 +389,28 @@ function EmailSub(entry){
 	    // Here we process any errors that may happen with the request
 	    textNode.text = 'ERROR';
 	});
+
+	thankyouModal.hidden = false;
+	//DISABLE LOSING MODAL
+	winModal.hidden = true;
+}
+
+function EmailLoseSub(){
+	Diagnostics.log(url + "/register?email=" + encodeURIComponent(userEmail2) );
+	Networking.fetch(url + "/register?email=" + encodeURIComponent(userEmail2) ).then(function(response) {
+		Diagnostics.log(response);
+	    //return response.json();
+	    Diagnostics.log('User email is ' + userEmail2);
+	  }).catch(function(error) {
+	    // Here we process any errors that may happen with the request
+	    textNode.text = 'ERROR';
+	});
 	//SHOW THANK YOU FOR ENTERING
 	thankyouModal.hidden = false;
-	thankyoutextNode.text = prizeMsg;
+	//DISABLE LOSING MODAL
+	loseModal.hidden = true;
 }
+
 
 
 //EMAIL KEYBOARD INPUT
@@ -364,10 +419,18 @@ TouchGestures.onTap(textbox).subscribe(function(event){
 	NativeUI.enterTextEditMode('Email');
 });
 
+TouchGestures.onTap(textbox2).subscribe(function(event){
+	Diagnostics.log('Email2 Box Tapped');
+	NativeUI.enterTextEditMode('Email2');
+});
+
 //LOG EMAIL
 TouchGestures.onTap(submitBut).subscribe(function(event){
 	Diagnostics.log('Submit Button Tapped');
 	EmailSub(entryId);
 });
 
-
+TouchGestures.onTap(submitBut2).subscribe(function(event){
+	Diagnostics.log('Submit Button Tapped');
+	EmailLoseSub();
+});
